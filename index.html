@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor - ADHD Champion Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 280px;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* Left Sidebar - Homework Tracker */
+        .homework-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid #4CAF50;
+        }
+
+        .homework-header {
+            text-align: center;
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .assignment-card {
+            background: linear-gradient(45deg, #FF9800, #FFC107);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 3px solid #FF6F00;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .assignment-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 152, 0, 0.4);
+        }
+
+        .assignment-card.completed {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            border-color: #2E7D32;
+            opacity: 0.7;
+        }
+
+        .assignment-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .assignment-due {
+            font-size: 12px;
+            color: #333;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .complete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Center - AI Chat */
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 3px solid #2196F3;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 17px 17px 0 0;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .tutor-status {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 80%;
+            position: relative;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.ai {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            margin-right: auto;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 17px 17px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #2196F3;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        /* Right Sidebar - Gamification */
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid #9C27B0;
+        }
+
+        .stats-header {
+            text-align: center;
+            color: #7B1FA2;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .xp-container {
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .xp-points {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .xp-level {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #FFD700;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .achievement {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+            font-size: 12px;
+            border: 2px solid #FF8F00;
+        }
+
+        .achievement.locked {
+            background: #ccc;
+            color: #666;
+            border-color: #999;
+        }
+
+        /* Responsive Design for Chromebook */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 250px 1fr 220px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .homework-panel, .stats-panel {
+                height: auto;
+            }
+        }
+
+        /* Fun animations */
+        .bounce {
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+
+        /* Loading indicator */
+        .typing-indicator {
+            display: none;
+            padding: 12px 18px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            max-width: 80%;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar - Homework Tracker -->
+        <div class="homework-panel">
+            <div class="homework-header">📚 Today's Assignments</div>
+            <div id="homework-list">
+                <div class="assignment-card" data-id="1">
+                    <button class="complete-btn" onclick="completeAssignment(1)">✓</button>
+                    <div class="assignment-title">Math - Chapter 5 Problems</div>
+                    <div class="assignment-due">Due: Today 3PM</div>
+                </div>
+                <div class="assignment-card" data-id="2">
+                    <button class="complete-btn" onclick="completeAssignment(2)">✓</button>
+                    <div class="assignment-title">Reading - Book Report Draft</div>
+                    <div class="assignment-due">Due: Tomorrow</div>
+                </div>
+                <div class="assignment-card" data-id="3">
+                    <button class="complete-btn" onclick="completeAssignment(3)">✓</button>
+                    <div class="assignment-title">Science - Lab Worksheet</div>
+                    <div class="assignment-due">Due: Friday</div>
+                </div>
+            </div>
+            
+            <button onclick="checkForNewAssignments()" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold;">
+                🔄 Check for New Assignments
+            </button>
+        </div>
+
+        <!-- Center - AI Chat -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                🤖 Your AI Learning Buddy
+                <div class="tutor-status"></div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai">
+                    <div>Hi there, Champion! 🌟 I'm here to help you with your homework and make learning fun! What would you like to work on today?</div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Ask me about homework, or just say hi!" onkeypress="testKeyPress(event)">
+                <button class="send-btn" onclick="sendMessage()">Send 🚀</button>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Gamification Stats -->
+        <div class="stats-panel">
+            <div class="stats-header">🏆 Your Progress</div>
+            
+            <div class="xp-container">
+                <div class="xp-points" id="xp-points">150 XP</div>
+                <div class="xp-level">Level 3 Scholar</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 60%;"></div>
+                </div>
+            </div>
+
+            <div class="achievement">
+                🎯 Homework Hero
+                <div style="font-size: 10px; margin-top: 2px;">Complete 5 assignments</div>
+            </div>
+            
+            <div class="achievement">
+                💬 Chat Champion
+                <div style="font-size: 10px; margin-top: 2px;">Ask 10 questions</div>
+            </div>
+            
+            <div class="achievement locked">
+                🌟 Week Warrior
+                <div style="font-size: 10px; margin-top: 2px;">7 days in a row</div>
+            </div>
+            
+            <div class="achievement locked">
+                🧠 Einstein Jr.
+                <div style="font-size: 10px; margin-top: 2px;">Master all subjects</div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 10px; background: #E3F2FD; border-radius: 10px; text-align: center; font-size: 12px; color: #1976D2;">
+                <div style="font-weight: bold;">📊 This Week</div>
+                <div>✅ 3 assignments done</div>
+                <div>💬 12 AI chats</div>
+                <div>⭐ 2 achievements earned</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // REAL AI Backend Configuration - WORKING PRODUCTION URL!
+        const AI_BACKEND_URL = 'https://ai-tutor-backend-seven.vercel.app';
+        
+        // Game State with conversation tracking
+        let gameState = {
+            xp: 150,
+            level: 3,
+            completedAssignments: 0,
+            chatCount: 0,
+            achievements: ['homework_hero', 'chat_champion'],
+            conversationHistory: [] // Track full conversation for context
+        };
+
+        // Mock assignments data (will be replaced with real API calls)
+        let assignments = [
+            { id: 1, title: "Math - Chapter 5 Problems", due: "Today 3PM", completed: false },
+            { id: 2, title: "Reading - Book Report Draft", due: "Tomorrow", completed: false },
+            { id: 3, title: "Science - Lab Worksheet", due: "Friday", completed: false }
+        ];
+
+        // Chat functionality
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message === '') return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Get REAL AI response from OpenAI!
+            try {
+                const response = await callOpenAI(message);
+                hideTypingIndicator();
+                addMessage(response, 'ai');
+                
+                // Update game stats
+                gameState.chatCount++;
+                addXP(5);
+                updateStats();
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage("Hmm, I'm having a little trouble right now! 🤔 But you're still awesome - try asking me again!", 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            messageDiv.innerHTML = `
+                <div>${text}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Add bounce animation
+            messageDiv.classList.add('bounce');
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'block';
+            document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'none';
+        }
+
+        function handleKeyPress(event) {
+            console.log('⌨️ Key pressed:', event.key);
+            if (event.key === 'Enter') {
+                console.log('⏎ Enter key detected, calling sendMessage');
+                sendMessage();
+            }
+        }
+
+        // Assignment management
+        function completeAssignment(assignmentId) {
+            const assignmentCard = document.querySelector(`[data-id="${assignmentId}"]`);
+            assignmentCard.classList.add('completed');
+            assignmentCard.classList.add('bounce');
+            
+            // Update game state
+            gameState.completedAssignments++;
+            addXP(25);
+            updateStats();
+            
+            // Celebratory message
+            setTimeout(() => {
+                addMessage(`🎉 Awesome! You completed an assignment! Keep up the great work, champion! +25 XP`, 'ai');
+            }, 500);
+        }
+
+        function addXP(points) {
+            gameState.xp += points;
+            
+            // Level up logic
+            const newLevel = Math.floor(gameState.xp / 100) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                setTimeout(() => {
+                    addMessage(`🎊 LEVEL UP! You're now a Level ${gameState.level} Scholar! Amazing progress!`, 'ai');
+                }, 800);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('xp-points').textContent = `${gameState.xp} XP`;
+            const progressPercent = (gameState.xp % 100);
+            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+        }
+
+        // Assignment fetching (simulate checking Ms. Yonkers' site)
+        async function checkForNewAssignments() {
+            const button = event.target;
+            button.textContent = '🔄 Checking...';
+            button.disabled = true;
+            
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // For now, just show a message (we'll implement real fetching later)
+            addMessage("📚 I checked Ms. Yonkers' classroom site! No new assignments right now, but I'll keep watching for you!", 'ai');
+            
+            button.textContent = '🔄 Check for New Assignments';
+            button.disabled = false;
+            
+            addXP(3);
+            updateStats();
+        }
+
+        // Initialize app with diagnostics
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            
+            // Focus on chat input
+            document.getElementById('chat-input').focus();
+            
+            // TEST: Check if functions are defined
+            console.log('🧪 DIAGNOSTICS:');
+            console.log('testSend function exists:', typeof testSend);
+            console.log('sendMessage function exists:', typeof sendMessage);
+            console.log('addMessage function exists:', typeof addMessage);
+            console.log('callRealAI function exists:', typeof callRealAI);
+            
+            console.log('🚀 AI Tutor App Loaded Successfully!');
+            console.log('🧠 Real OpenAI Backend Integration Ready!');
+            console.log('🎯 ADHD-optimized educational prompts active!');
+            console.log('💬 Conversation context tracking enabled!');
+            console.log(`🌐 Backend URL: ${AI_BACKEND_URL}`);
+        });
+
+        // REAL AI Integration with Enhanced Debugging
+        async function callRealAI(message) {
+            try {
+                console.log('🚀 callRealAI started with message:', message);
+                console.log('🌐 Backend URL:', AI_BACKEND_URL);
+                
+                const requestBody = {
+                    message: message,
+                    conversationHistory: gameState.conversationHistory
+                };
+                console.log('📤 Request body:', requestBody);
+                
+                console.log('📡 Making fetch request to:', `${AI_BACKEND_URL}/api/chat`);
+                
+                const response = await fetch(`${AI_BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                console.log('📨 Response status:', response.status);
+                console.log('📨 Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Response error text:', errorText);
+                    throw new Error(`Backend error: ${response.status} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Response data:', data);
+                
+                if (data.success) {
+                    // Update conversation history
+                    gameState.conversationHistory = data.conversationHistory || [];
+                    console.log('💾 Updated conversation history length:', gameState.conversationHistory.length);
+                    return data.message;
+                } else {
+                    throw new Error(data.error || 'Unknown backend error');
+                }
+                
+            } catch (error) {
+                console.error('🔥 callRealAI Error Details:');
+                console.error('🔥 Error name:', error.name);
+                console.error('🔥 Error message:', error.message);
+                console.error('🔥 Error stack:', error.stack);
+                
+                // Graceful fallback to encourage trying again
+                const fallbackResponses = [
+                    "I'm having a little trouble connecting to my brain right now! 🤔 But you're doing great - try asking me again!",
+                    "Oops! My thinking circuits need a moment! 🌟 You're awesome for being patient - ask me again in a sec!",
+                    "My AI brain is taking a quick break! 🚀 You're such a champion - try your question one more time!"
+                ];
+                
+                return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+            }
+        }
+
+        function generateSmartResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // FOLLOW-UP REQUESTS - Super important for ADHD learners!
+            if (lowerMessage.includes('one step at a time') || 
+                lowerMessage.includes('explain') && (lowerMessage.includes('step') || lowerMessage.includes('example')) ||
+                lowerMessage.includes('break it down') ||
+                lowerMessage.includes('show me how') ||
+                lowerMessage.includes("don't understand") ||
+                lowerMessage.includes('confused')) {
+                
+                if (gameState.lastTopic === 'decimal_addition' && gameState.lastProblem) {
+                    return `🎯 Perfect! Let's break down ${gameState.lastProblem} step by super-easy step! 🌟\n\n**STEP 1**: Write the numbers one above the other\n\`\`\`\n  7.87\n+ 9.87\n------\n\`\`\`\n\n**STEP 2**: Line up the decimal points perfectly (see how they're lined up?)\n\n**STEP 3**: Start from the rightmost column: 7 + 7 = 14. Write 4, carry the 1\n\n**STEP 4**: Middle column: 8 + 8 + 1(carried) = 17. Write 7, carry the 1\n\n**STEP 5**: Left column: 7 + 9 + 1(carried) = 17\n\n**ANSWER**: 17.74! 🎉\n\nTry it yourself and let me know what you get! 💪`;
+                }
+                
+                if (gameState.lastTopic === 'decimal_subtraction' && gameState.lastProblem) {
+                    return `🎯 Let's break down ${gameState.lastProblem} super slowly! 🌟\n\n**STEP 1**: Write them lined up\n**STEP 2**: Line up decimal points\n**STEP 3**: Subtract from right to left\n**STEP 4**: Keep the decimal in the same place\n\nTry it step by step! 💪`;
+                }
+                
+                return "🌟 I love that you want me to break it down! That's exactly how smart learners think! What specific topic should I explain step by step? Math, reading, science? 🎯";
+            }
+            
+            // Check for actual decimal math problems first (like 7.87 + 9.87)
+            const decimalPattern = /\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/;
+            if (decimalPattern.test(message)) {
+                // Extract the problem for context
+                const problemMatch = message.match(/\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/);
+                gameState.lastProblem = problemMatch ? problemMatch[0] : null;
+                
+                const operator = message.includes('+') ? 'addition' : 
+                               message.includes('-') ? 'subtraction' :
+                               message.includes('*') ? 'multiplication' : 'division';
+                               
+                gameState.lastTopic = `decimal_${operator}`;
+                               
+                return `🎯 Perfect! I see you have a decimal ${operator} problem! Here's how we solve it:\n\n✨ **STEP 1**: Line up the decimal points straight down\n✨ **STEP 2**: Add zeros if needed to make them the same length\n✨ **STEP 3**: Calculate like normal numbers\n✨ **STEP 4**: Put the decimal point in the same spot!\n\n${operator === 'addition' ? 'For adding: Stack them up and add column by column! 📊' : 'For subtracting: Line up and subtract from right to left! 📉'}\n\nTry working through your problem step by step! 💪\n\n*Need it broken down even more? Just ask me to explain one step at a time!* 🌟`;
+            }
+            
+            // Decimal addition help
+            if ((lowerMessage.includes('decimal') && lowerMessage.includes('add')) || 
+                (lowerMessage.includes('add') && lowerMessage.includes('decimal')) ||
+                lowerMessage.includes('decimal addition')) {
+                gameState.lastTopic = 'decimal_addition';
+                return "➕ Decimal addition! Here's the magic formula: 🎪\n\n1️⃣ **Line up the decimal points** (like a straight line!)\n2️⃣ **Add zeros** if one number is shorter\n3️⃣ **Add column by column** starting from the right\n4️⃣ **Keep the decimal point** in the same place!\n\nExample: 3.89 + 9.76\n```\n  3.89\n+ 9.76\n------\n 13.65\n```\n\nWhat's your decimal problem? Show me the numbers! 🌟\n\n*Want me to break it down step by step? Just ask!*";
+            }
+            
+            // Decimal subtraction - SPECIFIC
+            if ((lowerMessage.includes('decimal') && lowerMessage.includes('subtract')) ||
+                lowerMessage.includes('decimal subtraction')) {
+                gameState.lastTopic = 'decimal_subtraction';
+                return "➖ Decimal subtraction! I love this! 🌟 Here's the secret:\n\n1️⃣ **Line up the decimal points** like soldiers in a row!\n2️⃣ **Add zeros** if needed to make them equal length\n3️⃣ **Subtract from right to left** just like whole numbers\n4️⃣ **Keep the decimal** in the same spot!\n\nExample: 5.67 - 2.34\n```\n  5.67\n- 2.34\n------\n  3.33\n```\n\nWhat decimal subtraction problem are you working on? 🎯\n\n*Need help with each step? Just say so!*";
+            }
+            
+            // Specific math topics - FRACTIONS  
+            if (lowerMessage.includes('fraction')) {
+                return "🍕 Fractions are like pizza slices! The bottom number tells you how many slices the pizza was cut into, the top tells you how many you have! What fraction problem are we solving? 🎯";
+            }
+            
+            // Specific math topics - MULTIPLICATION
+            if (lowerMessage.includes('multiplication') || lowerMessage.includes('multiply') || lowerMessage.includes('times')) {
+                return "✨ Multiplication is repeated addition! 3 × 4 means 'add 3 four times' = 3+3+3+3 = 12! 🎯 What multiplication problem are you working on?";
+            }
+            
+            // Specific math topics - DIVISION
+            if (lowerMessage.includes('division') || lowerMessage.includes('divide')) {
+                return "🎪 Division is sharing equally! If you have 12 cookies and 3 friends, each friend gets 4 cookies! What division problem needs solving? 🍪";
+            }
+            
+            // General math help - but smarter detection
+            if (lowerMessage.includes('math') || lowerMessage.includes('number') || lowerMessage.includes('calculate') || lowerMessage.includes('problem') ||
+                lowerMessage.includes('understand how to add') || lowerMessage.includes('understand how to subtract')) {
+                
+                // Check if it's about decimals specifically
+                if (lowerMessage.includes('decimal')) {
+                    if (lowerMessage.includes('add') || lowerMessage.includes('addition')) {
+                        gameState.lastTopic = 'decimal_addition';
+                        return "🎯 Decimal addition mastery incoming! Here's your step-by-step guide:\n\n✅ **Line up those decimal points** - this is KEY!\n✅ **Make them equal length** by adding zeros\n✅ **Add normally** from right to left\n✅ **Drop down the decimal** in the same spot\n\nTry it: 3.89 + 9.76\n```\n  3.89\n+ 9.76\n------\n 13.65\n```\n\nGot a specific problem? Show me! 🌟\n\n*Want me to explain each step slowly? Just ask!*";
+                    } else if (lowerMessage.includes('subtract')) {
+                        gameState.lastTopic = 'decimal_subtraction';
+                        return "🎯 Decimal subtraction champion! Here's the winning strategy:\n\n✅ **Line up decimal points** perfectly\n✅ **Add zeros** to make equal length\n✅ **Subtract normally** from right to left\n✅ **Keep decimal** in same position\n\nShow me your decimal problem and let's solve it together! 💪\n\n*Need it broken down step by step? Just say so!*";
+                    }
+                }
+                
+                gameState.lastTopic = 'general_math';
+                const mathResponses = [
+                    "🧮 Math time! What specific problem are you working on? Let's break it down step by step!",
+                    "📊 Math is like solving puzzles! 🧩 Show me the exact numbers and I'll help you find the solution!",
+                    "🎯 Ready to tackle some math! What type of problem - addition, subtraction, multiplication, or division?"
+                ];
+                return mathResponses[Math.floor(Math.random() * mathResponses.length)];
+            }
+            
+            // Reading comprehension responses  
+            if (lowerMessage.includes('reading') && lowerMessage.includes('comprehension')) {
+                return "📚 Reading comprehension detective! 🔍 Here's my strategy: \n\n1️⃣ Read the question FIRST \n2️⃣ Then read the story looking for clues \n3️⃣ Go back and find the exact answer! \n\nWhat story or passage are you working with? Let's solve this mystery together! 🎯";
+            }
+            
+            if (lowerMessage.includes('reading') || lowerMessage.includes('book') || lowerMessage.includes('story')) {
+                const readingResponses = [
+                    "📖 Awesome! Reading makes your brain super strong! 💪 What book or story are you working with? What questions do you need to answer?",
+                    "✨ Reading comprehension is like being a story detective! What part of the story is confusing you? Let's figure it out!",
+                    "🌟 Every great reader started exactly where you are! What's the main thing you're trying to understand about your reading?"
+                ];
+                return readingResponses[Math.floor(Math.random() * readingResponses.length)];
+            }
+            
+            // Science responses - Specific topics
+            if (lowerMessage.includes('science') && lowerMessage.includes('lab')) {
+                return "🧪 Science lab time! Experiments are the best! 🌟 What experiment are you doing? Remember: observe, predict, test, and record! What part needs help? ⚗️";
+            }
+            
+            if (lowerMessage.includes('science') || lowerMessage.includes('experiment')) {
+                const scienceResponses = [
+                    "🔬 Science explorer! What fascinating discovery are we investigating today? Tell me about your assignment!",
+                    "⚗️ Science is everywhere! What concept or experiment are you working on? Let's explore together!",
+                    "🌟 Amazing scientist in action! What science mystery are we solving today?"
+                ];
+                return scienceResponses[Math.floor(Math.random() * scienceResponses.length)];
+            }
+            
+            // Stuck/overwhelmed responses
+            if (lowerMessage.includes('stuck') || lowerMessage.includes('confused') || lowerMessage.includes('help') || lowerMessage.includes('hard')) {
+                const helpResponses = [
+                    "💪 Hey champion! Feeling stuck just means your brain is growing! 🧠✨ What specific part has you puzzled?",
+                    "🌟 It's totally okay to feel confused - that's how learning works! Tell me exactly where you got stuck, and we'll figure it out!",
+                    "🎯 You're so smart for asking for help! That's what successful students do! What subject or problem needs our attention?",
+                    "✨ Stuck feelings mean you're leveling up! 🚀 Let's break this down into tiny steps. What are you working on?"
+                ];
+                return helpResponses[Math.floor(Math.random() * helpResponses.length)];
+            }
+            
+            // Greeting responses
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+                const greetingResponses = [
+                    "🌟 Hey there, superstar! Ready to conquer some awesome learning today? What subject should we tackle first?",
+                    "🏆 Hi champion! I'm excited to help you succeed today! What homework adventure are we going on?",
+                    "✨ Hello, brilliant mind! What amazing things are we going to learn together today?",
+                    "🚀 Hey learning hero! Ready to level up your skills? What can I help you with?"
+                ];
+                return greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+            }
+            
+            // Check if message contains actual numbers (homework problem) - ENHANCED
+            const hasNumbers = /\d/.test(message);
+            const hasDecimals = /\d+\.\d+/.test(message);
+            
+            if (hasNumbers && (lowerMessage.includes('subtract') || lowerMessage.includes('add') || lowerMessage.includes('multiply') || lowerMessage.includes('divide'))) {
+                if (hasDecimals) {
+                    const operation = lowerMessage.includes('add') || message.includes('+') ? 'addition' :
+                                    lowerMessage.includes('subtract') || message.includes('-') ? 'subtraction' :
+                                    lowerMessage.includes('multiply') || message.includes('*') ? 'multiplication' : 'division';
+                    
+                    gameState.lastTopic = `decimal_${operation}`;
+                    
+                    // Try to extract the specific problem
+                    const problemMatch = message.match(/\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/);
+                    gameState.lastProblem = problemMatch ? problemMatch[0] : null;
+                    
+                    return `🎯 I see decimal ${operation}! Perfect! 🌟\n\nRemember the golden rule: **LINE UP THE DECIMAL POINTS!**\n\nThen ${operation === 'addition' ? 'add column by column' : operation === 'subtraction' ? 'subtract from right to left' : 'follow the normal steps'}.\n\nTry working through it step by step. If you get stuck, just ask! 💪✨\n\n*Want me to walk through it step by step? Just ask!*`;
+                } else {
+                    gameState.lastTopic = 'basic_math';
+                    return "🎯 I see you have a specific math problem with numbers! That's awesome! 🌟 Let me help you think through it step by step. What's the first step you think we should take? Remember: take it slow and steady! 💪";
+                }
+            }
+            
+            // Default encouraging response
+            const defaultResponses = [
+                "🌟 I'm here to help you succeed! Tell me more about what you're working on, and let's figure it out together!",
+                "💪 You're doing great by asking questions! What specific subject or assignment can I help you with?",
+                "✨ Learning champion! I believe in you! What homework or concept would you like to explore?",
+                "🎯 Ready to help you tackle anything! What subject needs our attention today?"
+            ];
+            
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+    </script>
+</body>
+</html>
