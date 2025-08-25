@@ -387,7 +387,7 @@
             </div>
             
             <div class="chat-input-container">
-                <input type="text" class="chat-input" id="chat-input" placeholder="Ask me about homework, or just say hi!" onkeypress="testKeyPress(event)">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Ask me about homework, or just say hi!" onkeypress="handleKeyPress(event)">
                 <button class="send-btn" onclick="sendMessage()">Send 🚀</button>
             </div>
         </div>
@@ -434,7 +434,7 @@
     </div>
 
     <script>
-        // REAL AI Backend Configuration - WORKING PRODUCTION URL!
+        // SECURE Backend Configuration
         const AI_BACKEND_URL = 'https://ai-tutor-backend-seven.vercel.app';
         
         // Game State with conversation tracking
@@ -444,33 +444,96 @@
             completedAssignments: 0,
             chatCount: 0,
             achievements: ['homework_hero', 'chat_champion'],
-            conversationHistory: [] // Track full conversation for context
+            conversationHistory: []
         };
 
-        // Mock assignments data (will be replaced with real API calls)
-        let assignments = [
-            { id: 1, title: "Math - Chapter 5 Problems", due: "Today 3PM", completed: false },
-            { id: 2, title: "Reading - Book Report Draft", due: "Tomorrow", completed: false },
-            { id: 3, title: "Science - Lab Worksheet", due: "Friday", completed: false }
-        ];
+        // REAL AI Integration with Secure Backend
+        async function callRealAI(message) {
+            try {
+                console.log('🚀 callRealAI started with message:', message);
+                console.log('🌐 Backend URL:', AI_BACKEND_URL);
+                
+                const requestBody = {
+                    message: message,
+                    conversationHistory: gameState.conversationHistory
+                };
+                console.log('📤 Request body:', requestBody);
+                
+                console.log('📡 Making fetch request to:', `${AI_BACKEND_URL}/api/chat`);
+                
+                const response = await fetch(`${AI_BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                console.log('📨 Response status:', response.status);
+                console.log('📨 Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Response error text:', errorText);
+                    throw new Error(`Backend error: ${response.status} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Response data:', data);
+                
+                if (data.success) {
+                    // Update conversation history
+                    gameState.conversationHistory = data.conversationHistory || [];
+                    console.log('💾 Updated conversation history length:', gameState.conversationHistory.length);
+                    return data.message;
+                } else {
+                    throw new Error(data.error || 'Unknown backend error');
+                }
+                
+            } catch (error) {
+                console.error('🔥 callRealAI Error Details:');
+                console.error('🔥 Error name:', error.name);
+                console.error('🔥 Error message:', error.message);
+                console.error('🔥 Error stack:', error.stack);
+                
+                return "I'm having a little trouble connecting to my brain right now! 🤔 But you're doing great - try asking me again!";
+            }
+        }
 
-        // Chat functionality
+        // Chat functionality with debugging
         async function sendMessage() {
+            console.log('🎯 sendMessage function called!');
+            
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
             
-            if (message === '') return;
+            console.log('📝 Input element:', input);
+            console.log('💬 Message value:', `"${message}"`);
+            console.log('📏 Message length:', message.length);
+            
+            if (message === '') {
+                console.log('⚠️ Empty message, returning early');
+                return;
+            }
 
-            // Add user message
-            addMessage(message, 'user');
-            input.value = '';
-
-            // Show typing indicator
-            showTypingIndicator();
-
-            // Get REAL AI response from OpenAI!
+            console.log('✅ Message valid, proceeding...');
+            
             try {
-                const response = await callOpenAI(message);
+                // Add user message
+                console.log('➕ Adding user message to chat');
+                addMessage(message, 'user');
+                input.value = '';
+
+                // Show typing indicator
+                console.log('⏳ Showing typing indicator');
+                showTypingIndicator();
+
+                // Get REAL AI response from OpenAI backend!
+                console.log('🤖 About to call callRealAI...');
+                const response = await callRealAI(message);
+                
+                console.log('✅ Got response from callRealAI:', response?.slice(0, 50) + '...');
+                
                 hideTypingIndicator();
                 addMessage(response, 'ai');
                 
@@ -478,9 +541,13 @@
                 gameState.chatCount++;
                 addXP(5);
                 updateStats();
+                
+                console.log('🎉 sendMessage completed successfully');
+                
             } catch (error) {
+                console.error('💥 Error in sendMessage:', error);
                 hideTypingIndicator();
-                addMessage("Hmm, I'm having a little trouble right now! 🤔 But you're still awesome - try asking me again!", 'ai');
+                addMessage("Something went wrong, but you're still amazing! 🌟 Try asking me again!", 'ai');
             }
         }
 
@@ -581,255 +648,19 @@
             // Focus on chat input
             document.getElementById('chat-input').focus();
             
-            // TEST: Check if functions are defined
             console.log('🧪 DIAGNOSTICS:');
-            console.log('testSend function exists:', typeof testSend);
             console.log('sendMessage function exists:', typeof sendMessage);
             console.log('addMessage function exists:', typeof addMessage);
             console.log('callRealAI function exists:', typeof callRealAI);
+            console.log('handleKeyPress function exists:', typeof handleKeyPress);
             
             console.log('🚀 AI Tutor App Loaded Successfully!');
             console.log('🧠 Real OpenAI Backend Integration Ready!');
             console.log('🎯 ADHD-optimized educational prompts active!');
             console.log('💬 Conversation context tracking enabled!');
             console.log(`🌐 Backend URL: ${AI_BACKEND_URL}`);
+            console.log('🔐 API key secured with environment variables!');
         });
-
-        // REAL AI Integration with Enhanced Debugging
-        async function callRealAI(message) {
-            try {
-                console.log('🚀 callRealAI started with message:', message);
-                console.log('🌐 Backend URL:', AI_BACKEND_URL);
-                
-                const requestBody = {
-                    message: message,
-                    conversationHistory: gameState.conversationHistory
-                };
-                console.log('📤 Request body:', requestBody);
-                
-                console.log('📡 Making fetch request to:', `${AI_BACKEND_URL}/api/chat`);
-                
-                const response = await fetch(`${AI_BACKEND_URL}/api/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                console.log('📨 Response status:', response.status);
-                console.log('📨 Response ok:', response.ok);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Response error text:', errorText);
-                    throw new Error(`Backend error: ${response.status} - ${errorText}`);
-                }
-                
-                const data = await response.json();
-                console.log('✅ Response data:', data);
-                
-                if (data.success) {
-                    // Update conversation history
-                    gameState.conversationHistory = data.conversationHistory || [];
-                    console.log('💾 Updated conversation history length:', gameState.conversationHistory.length);
-                    return data.message;
-                } else {
-                    throw new Error(data.error || 'Unknown backend error');
-                }
-                
-            } catch (error) {
-                console.error('🔥 callRealAI Error Details:');
-                console.error('🔥 Error name:', error.name);
-                console.error('🔥 Error message:', error.message);
-                console.error('🔥 Error stack:', error.stack);
-                
-                // Graceful fallback to encourage trying again
-                const fallbackResponses = [
-                    "I'm having a little trouble connecting to my brain right now! 🤔 But you're doing great - try asking me again!",
-                    "Oops! My thinking circuits need a moment! 🌟 You're awesome for being patient - ask me again in a sec!",
-                    "My AI brain is taking a quick break! 🚀 You're such a champion - try your question one more time!"
-                ];
-                
-                return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-            }
-        }
-
-        function generateSmartResponse(message) {
-            const lowerMessage = message.toLowerCase();
-            
-            // FOLLOW-UP REQUESTS - Super important for ADHD learners!
-            if (lowerMessage.includes('one step at a time') || 
-                lowerMessage.includes('explain') && (lowerMessage.includes('step') || lowerMessage.includes('example')) ||
-                lowerMessage.includes('break it down') ||
-                lowerMessage.includes('show me how') ||
-                lowerMessage.includes("don't understand") ||
-                lowerMessage.includes('confused')) {
-                
-                if (gameState.lastTopic === 'decimal_addition' && gameState.lastProblem) {
-                    return `🎯 Perfect! Let's break down ${gameState.lastProblem} step by super-easy step! 🌟\n\n**STEP 1**: Write the numbers one above the other\n\`\`\`\n  7.87\n+ 9.87\n------\n\`\`\`\n\n**STEP 2**: Line up the decimal points perfectly (see how they're lined up?)\n\n**STEP 3**: Start from the rightmost column: 7 + 7 = 14. Write 4, carry the 1\n\n**STEP 4**: Middle column: 8 + 8 + 1(carried) = 17. Write 7, carry the 1\n\n**STEP 5**: Left column: 7 + 9 + 1(carried) = 17\n\n**ANSWER**: 17.74! 🎉\n\nTry it yourself and let me know what you get! 💪`;
-                }
-                
-                if (gameState.lastTopic === 'decimal_subtraction' && gameState.lastProblem) {
-                    return `🎯 Let's break down ${gameState.lastProblem} super slowly! 🌟\n\n**STEP 1**: Write them lined up\n**STEP 2**: Line up decimal points\n**STEP 3**: Subtract from right to left\n**STEP 4**: Keep the decimal in the same place\n\nTry it step by step! 💪`;
-                }
-                
-                return "🌟 I love that you want me to break it down! That's exactly how smart learners think! What specific topic should I explain step by step? Math, reading, science? 🎯";
-            }
-            
-            // Check for actual decimal math problems first (like 7.87 + 9.87)
-            const decimalPattern = /\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/;
-            if (decimalPattern.test(message)) {
-                // Extract the problem for context
-                const problemMatch = message.match(/\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/);
-                gameState.lastProblem = problemMatch ? problemMatch[0] : null;
-                
-                const operator = message.includes('+') ? 'addition' : 
-                               message.includes('-') ? 'subtraction' :
-                               message.includes('*') ? 'multiplication' : 'division';
-                               
-                gameState.lastTopic = `decimal_${operator}`;
-                               
-                return `🎯 Perfect! I see you have a decimal ${operator} problem! Here's how we solve it:\n\n✨ **STEP 1**: Line up the decimal points straight down\n✨ **STEP 2**: Add zeros if needed to make them the same length\n✨ **STEP 3**: Calculate like normal numbers\n✨ **STEP 4**: Put the decimal point in the same spot!\n\n${operator === 'addition' ? 'For adding: Stack them up and add column by column! 📊' : 'For subtracting: Line up and subtract from right to left! 📉'}\n\nTry working through your problem step by step! 💪\n\n*Need it broken down even more? Just ask me to explain one step at a time!* 🌟`;
-            }
-            
-            // Decimal addition help
-            if ((lowerMessage.includes('decimal') && lowerMessage.includes('add')) || 
-                (lowerMessage.includes('add') && lowerMessage.includes('decimal')) ||
-                lowerMessage.includes('decimal addition')) {
-                gameState.lastTopic = 'decimal_addition';
-                return "➕ Decimal addition! Here's the magic formula: 🎪\n\n1️⃣ **Line up the decimal points** (like a straight line!)\n2️⃣ **Add zeros** if one number is shorter\n3️⃣ **Add column by column** starting from the right\n4️⃣ **Keep the decimal point** in the same place!\n\nExample: 3.89 + 9.76\n```\n  3.89\n+ 9.76\n------\n 13.65\n```\n\nWhat's your decimal problem? Show me the numbers! 🌟\n\n*Want me to break it down step by step? Just ask!*";
-            }
-            
-            // Decimal subtraction - SPECIFIC
-            if ((lowerMessage.includes('decimal') && lowerMessage.includes('subtract')) ||
-                lowerMessage.includes('decimal subtraction')) {
-                gameState.lastTopic = 'decimal_subtraction';
-                return "➖ Decimal subtraction! I love this! 🌟 Here's the secret:\n\n1️⃣ **Line up the decimal points** like soldiers in a row!\n2️⃣ **Add zeros** if needed to make them equal length\n3️⃣ **Subtract from right to left** just like whole numbers\n4️⃣ **Keep the decimal** in the same spot!\n\nExample: 5.67 - 2.34\n```\n  5.67\n- 2.34\n------\n  3.33\n```\n\nWhat decimal subtraction problem are you working on? 🎯\n\n*Need help with each step? Just say so!*";
-            }
-            
-            // Specific math topics - FRACTIONS  
-            if (lowerMessage.includes('fraction')) {
-                return "🍕 Fractions are like pizza slices! The bottom number tells you how many slices the pizza was cut into, the top tells you how many you have! What fraction problem are we solving? 🎯";
-            }
-            
-            // Specific math topics - MULTIPLICATION
-            if (lowerMessage.includes('multiplication') || lowerMessage.includes('multiply') || lowerMessage.includes('times')) {
-                return "✨ Multiplication is repeated addition! 3 × 4 means 'add 3 four times' = 3+3+3+3 = 12! 🎯 What multiplication problem are you working on?";
-            }
-            
-            // Specific math topics - DIVISION
-            if (lowerMessage.includes('division') || lowerMessage.includes('divide')) {
-                return "🎪 Division is sharing equally! If you have 12 cookies and 3 friends, each friend gets 4 cookies! What division problem needs solving? 🍪";
-            }
-            
-            // General math help - but smarter detection
-            if (lowerMessage.includes('math') || lowerMessage.includes('number') || lowerMessage.includes('calculate') || lowerMessage.includes('problem') ||
-                lowerMessage.includes('understand how to add') || lowerMessage.includes('understand how to subtract')) {
-                
-                // Check if it's about decimals specifically
-                if (lowerMessage.includes('decimal')) {
-                    if (lowerMessage.includes('add') || lowerMessage.includes('addition')) {
-                        gameState.lastTopic = 'decimal_addition';
-                        return "🎯 Decimal addition mastery incoming! Here's your step-by-step guide:\n\n✅ **Line up those decimal points** - this is KEY!\n✅ **Make them equal length** by adding zeros\n✅ **Add normally** from right to left\n✅ **Drop down the decimal** in the same spot\n\nTry it: 3.89 + 9.76\n```\n  3.89\n+ 9.76\n------\n 13.65\n```\n\nGot a specific problem? Show me! 🌟\n\n*Want me to explain each step slowly? Just ask!*";
-                    } else if (lowerMessage.includes('subtract')) {
-                        gameState.lastTopic = 'decimal_subtraction';
-                        return "🎯 Decimal subtraction champion! Here's the winning strategy:\n\n✅ **Line up decimal points** perfectly\n✅ **Add zeros** to make equal length\n✅ **Subtract normally** from right to left\n✅ **Keep decimal** in same position\n\nShow me your decimal problem and let's solve it together! 💪\n\n*Need it broken down step by step? Just say so!*";
-                    }
-                }
-                
-                gameState.lastTopic = 'general_math';
-                const mathResponses = [
-                    "🧮 Math time! What specific problem are you working on? Let's break it down step by step!",
-                    "📊 Math is like solving puzzles! 🧩 Show me the exact numbers and I'll help you find the solution!",
-                    "🎯 Ready to tackle some math! What type of problem - addition, subtraction, multiplication, or division?"
-                ];
-                return mathResponses[Math.floor(Math.random() * mathResponses.length)];
-            }
-            
-            // Reading comprehension responses  
-            if (lowerMessage.includes('reading') && lowerMessage.includes('comprehension')) {
-                return "📚 Reading comprehension detective! 🔍 Here's my strategy: \n\n1️⃣ Read the question FIRST \n2️⃣ Then read the story looking for clues \n3️⃣ Go back and find the exact answer! \n\nWhat story or passage are you working with? Let's solve this mystery together! 🎯";
-            }
-            
-            if (lowerMessage.includes('reading') || lowerMessage.includes('book') || lowerMessage.includes('story')) {
-                const readingResponses = [
-                    "📖 Awesome! Reading makes your brain super strong! 💪 What book or story are you working with? What questions do you need to answer?",
-                    "✨ Reading comprehension is like being a story detective! What part of the story is confusing you? Let's figure it out!",
-                    "🌟 Every great reader started exactly where you are! What's the main thing you're trying to understand about your reading?"
-                ];
-                return readingResponses[Math.floor(Math.random() * readingResponses.length)];
-            }
-            
-            // Science responses - Specific topics
-            if (lowerMessage.includes('science') && lowerMessage.includes('lab')) {
-                return "🧪 Science lab time! Experiments are the best! 🌟 What experiment are you doing? Remember: observe, predict, test, and record! What part needs help? ⚗️";
-            }
-            
-            if (lowerMessage.includes('science') || lowerMessage.includes('experiment')) {
-                const scienceResponses = [
-                    "🔬 Science explorer! What fascinating discovery are we investigating today? Tell me about your assignment!",
-                    "⚗️ Science is everywhere! What concept or experiment are you working on? Let's explore together!",
-                    "🌟 Amazing scientist in action! What science mystery are we solving today?"
-                ];
-                return scienceResponses[Math.floor(Math.random() * scienceResponses.length)];
-            }
-            
-            // Stuck/overwhelmed responses
-            if (lowerMessage.includes('stuck') || lowerMessage.includes('confused') || lowerMessage.includes('help') || lowerMessage.includes('hard')) {
-                const helpResponses = [
-                    "💪 Hey champion! Feeling stuck just means your brain is growing! 🧠✨ What specific part has you puzzled?",
-                    "🌟 It's totally okay to feel confused - that's how learning works! Tell me exactly where you got stuck, and we'll figure it out!",
-                    "🎯 You're so smart for asking for help! That's what successful students do! What subject or problem needs our attention?",
-                    "✨ Stuck feelings mean you're leveling up! 🚀 Let's break this down into tiny steps. What are you working on?"
-                ];
-                return helpResponses[Math.floor(Math.random() * helpResponses.length)];
-            }
-            
-            // Greeting responses
-            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-                const greetingResponses = [
-                    "🌟 Hey there, superstar! Ready to conquer some awesome learning today? What subject should we tackle first?",
-                    "🏆 Hi champion! I'm excited to help you succeed today! What homework adventure are we going on?",
-                    "✨ Hello, brilliant mind! What amazing things are we going to learn together today?",
-                    "🚀 Hey learning hero! Ready to level up your skills? What can I help you with?"
-                ];
-                return greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
-            }
-            
-            // Check if message contains actual numbers (homework problem) - ENHANCED
-            const hasNumbers = /\d/.test(message);
-            const hasDecimals = /\d+\.\d+/.test(message);
-            
-            if (hasNumbers && (lowerMessage.includes('subtract') || lowerMessage.includes('add') || lowerMessage.includes('multiply') || lowerMessage.includes('divide'))) {
-                if (hasDecimals) {
-                    const operation = lowerMessage.includes('add') || message.includes('+') ? 'addition' :
-                                    lowerMessage.includes('subtract') || message.includes('-') ? 'subtraction' :
-                                    lowerMessage.includes('multiply') || message.includes('*') ? 'multiplication' : 'division';
-                    
-                    gameState.lastTopic = `decimal_${operation}`;
-                    
-                    // Try to extract the specific problem
-                    const problemMatch = message.match(/\d+\.\d+\s*[\+\-\*\/]\s*\d+\.\d+/);
-                    gameState.lastProblem = problemMatch ? problemMatch[0] : null;
-                    
-                    return `🎯 I see decimal ${operation}! Perfect! 🌟\n\nRemember the golden rule: **LINE UP THE DECIMAL POINTS!**\n\nThen ${operation === 'addition' ? 'add column by column' : operation === 'subtraction' ? 'subtract from right to left' : 'follow the normal steps'}.\n\nTry working through it step by step. If you get stuck, just ask! 💪✨\n\n*Want me to walk through it step by step? Just ask!*`;
-                } else {
-                    gameState.lastTopic = 'basic_math';
-                    return "🎯 I see you have a specific math problem with numbers! That's awesome! 🌟 Let me help you think through it step by step. What's the first step you think we should take? Remember: take it slow and steady! 💪";
-                }
-            }
-            
-            // Default encouraging response
-            const defaultResponses = [
-                "🌟 I'm here to help you succeed! Tell me more about what you're working on, and let's figure it out together!",
-                "💪 You're doing great by asking questions! What specific subject or assignment can I help you with?",
-                "✨ Learning champion! I believe in you! What homework or concept would you like to explore?",
-                "🎯 Ready to help you tackle anything! What subject needs our attention today?"
-            ];
-            
-            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-        }
     </script>
 </body>
 </html>
